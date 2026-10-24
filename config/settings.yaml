@@ -1,0 +1,25 @@
+# 主配置。没写的项自动用代码里的默认值（settings.py 的 dataclass）。
+# 原则：这里只放"会变的东西"。
+
+browser:
+  name: edge            # edge | chrome
+  headless: false       # 登录要手动/扫码时必须 false
+  width: 1280
+  height: 800
+  page_load_timeout: 30
+  profile_dir: state/browser-profile   # 登录态缓存，二次启动免登录
+
+login:
+  mode: manual          # manual=自己登录（稳，默认）；auto=用账号密码自动填表
+  url: https://login.zhihuishu.com/?origin=zhs&service=https://onlineservice-api.zhihuishu.com/gateway/f/v1/login/gologin
+  wait_timeout: 300     # 手动登录最长等你多少秒
+
+target:
+  base_url: https://www.zhihuishu.com
+  course_url: "https://onlineweb.zhihuishu.com/onlinestuh5"        # ★必填：课程学习页链接（浏览器打开课程后复制地址栏）
+  allowed_hosts:        # 安全闸门：脚本只许访问这些域名
+    - zhihuishu.com
+
+waits:
+  find_timeout: 10      # 找单个元素最长等几秒
+  poll: 0.5             # 刷课状态机多久看一眼页面
