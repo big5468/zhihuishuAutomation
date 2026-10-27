@@ -34,6 +34,7 @@ class Ui(Protocol):
     def url(self) -> str: ...
     def js(self, script: str): ...
     def screenshot(self, path: str) -> None: ...
+    def hover(self,selector: str) -> None: ...
 
 
 class SeleniumUi:
@@ -143,3 +144,11 @@ class SeleniumUi:
     def screenshot(self, path: str) -> None:
         self.driver.save_screenshot(path)
         logger.info("已截图：%s", path)
+
+    def hover(self, selector: str) -> None:  # 实现里加这个方法
+        """鼠标悬停到元素中心（触发 :hover，让控制条等现身）。"""
+        self._wait_owner(selector, self.find_timeout)
+        from selenium.webdriver.common.action_chains import ActionChains
+        el = self.driver.find_element(By.CSS_SELECTOR, selector)
+        ActionChains(self.driver).move_to_element(el).perform()
+        self.driver.switch_to.default_content()

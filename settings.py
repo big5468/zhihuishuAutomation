@@ -51,6 +51,7 @@ class TargetCfg:
 class WaitsCfg:
     find_timeout: float = 10.0    # 找一个元素的最长等待（秒）
     poll: float = 0.5             # 状态机轮询间隔（秒）
+    max_idle: float = 10.0
 
 
 @dataclass

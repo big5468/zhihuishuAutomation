@@ -1,0 +1,43 @@
+10/24 22:06 的提交
+
+当前程序存在的问题
+看门狗状态机在播放视频会无事件输出,超时看门狗会结束程序
+-> 解决:延长看门狗的时间 || is_paused为false将不记录时间
+在答题完成后没有关闭当前窗口
+-> 加一步行为
+	<div data-v-b4fb0e2e="" class="btn">关闭</div> 元素
+##测试错误的问题
+网页播放的视频是第1.1开始的，而不是真实进度
+导致测试的结构无法参考
+NEW问题
+进入课程找寻未播放的进度
+播放结束判断，点击下一集。而不是继续video.play()
+-> 弹窗面板 el-dialog el-dialog__header    AI助教小智给你出题啦！学习过程中有问题，随时
+-> 弹窗回答
+	<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use></svg><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use>
+	图标名称
+-> 关闭弹窗 
+ 	el-dialog__footer dialog-footer bth
+-> 学前必读 元素 dialog-read  iconfont iconguanbi
+解决检测
+答题时的过快操作
+-> 答题的随机休眠程序
+播放的随机暂停，模仿行为
+-> 新建行为
+
+
+18:52:16 INFO    pages: 开始刷课（每 1.5 秒轮询一次）
+18:52:21 INFO    pages: 视频是暂停的 → 已恢复播放
+18:52:26 INFO    pages: 视频是暂停的 → 已恢复播放
+18:52:27 INFO    pages: 本集播完 → 切下一集
+18:52:27 INFO    pages: 视频是暂停的 → 已恢复播放
+18:52:29 INFO    pages: 视频是暂停的 → 已恢复播放
+18:54:22 INFO    pages: 检测到弹题 → 选第一项并提交
+
+暂停恢复会多次触发
+选择会卡住在这
+
+判断题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
+多选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use></svg>
+单选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
+我们可以看出class中 都为套用了同一class icon topic-option 他们都能复用用一逻辑  

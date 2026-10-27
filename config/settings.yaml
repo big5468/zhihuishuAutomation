@@ -21,5 +21,6 @@ target:
     - zhihuishu.com
 
 waits:
-  find_timeout: 10      # 找单个元素最长等几秒
-  poll: 0.5             # 刷课状态机多久看一眼页面
+  find_timeout: 20      # 找单个元素最长等几秒
+  poll: 3                # 刷课状态机多久看一眼页面
+  max_idle: 3000

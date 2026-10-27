@@ -14,8 +14,11 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime
+from time import sleep
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
+
+from sqlalchemy.testing.config import ident
 
 from errors import AutomationError, UiTimeout
 
@@ -72,12 +75,17 @@ class LoginPage:
 class CoursePage:
     """课程学习页：视频播放、弹题、防作弊检测。"""
 
+    POPUP_TEXT = " AI助教小智给你出题啦！学习过程中有问题，随时"  # 弹窗文字
+    POPUP_CLOSE = "关闭"
+
     VIDEO = "video"                          # <video> 标签，几乎不会变
-    POPUP = ".examPanel"                     # [待校对] 弹题面板
-    POPUP_OPTION = ".examPanel input[type=radio], .examPanel input[type=checkbox]"
-    POPUP_SUBMIT = ".examPanel .submit"      # [待校对] 弹题提交按钮
+    # POPUP_OPTION = ".examPanel input[type=radio], .examPanel input[type=checkbox]"
+    # POPUP_SUBMIT = ".examPanel .submit"      # 弹题提交按钮
+    POPUP_OPTION = ".icon.topic-option"
+    NEXT_EP = ".nextButton"                  # 下一集
     VERIFY = ".verify-mask, .ydm-main"       # [待校对] 防作弊/验证弹层
-    FINISHED = ".videoFinish, .playFinish"   # [待校对] 全部播完的标识
+    FINISHED = ".videoFinish, .playFinish"   # 全部播完的标识
+    #POPUP_CLOSE = ".dialog-footer .bth" # [待校对] 关闭弹窗面板
 
     # ---------- 单个动作（每个只做一件事，状态机负责编排） ----------
 
@@ -87,18 +95,25 @@ class CoursePage:
 
     @classmethod
     def has_popup(cls, ui: "Ui") -> bool:
-        return ui.exists(cls.POPUP)
+        return ui.js(
+            "var hit = [...document.querySelectorAll('div,span')]"
+            f".some(e => e.textContent.includes('{cls.POPUP_TEXT}'));"
+            "return hit ? 'yes' : null;"
+        ) is not None
 
     @classmethod
     def answer_popup(cls, ui: "Ui") -> None:
         """弹题作答：选第一个选项然后提交。答错一般只记一次，重点是别卡住播放。"""
-        logger.info("检测到弹题 → 选第一项并提交")
-        ui.click(cls.POPUP_OPTION)
-        ui.click(cls.POPUP_SUBMIT)
+        logger.info("检测到弹题 → 选择答案")
         try:
-            ui.wait_gone(cls.POPUP, timeout=10)
+            ui.wait(cls.POPUP_OPTION,timeout=10)
+            ui.click(cls.POPUP_OPTION)
+            logger.info("点击完成")
         except UiTimeout:
-            logger.warning("弹题提交后面板没消失，继续播放（下次轮询会再处理）")
+            logger.info("答题点击未完成")
+
+
+
 
     @classmethod
     def is_paused(cls, ui: "Ui") -> bool:
@@ -107,9 +122,49 @@ class CoursePage:
 
     @classmethod
     def resume(cls, ui: "Ui") -> None:
-        """用 JS 调 play() 恢复播放 —— 比点播放按钮稳（不怕按钮选择器变/点成暂停）。"""
+        """用 JS 调 play() 恢复播放"""
         if ui.js("var v=document.querySelector('video'); if(v){v.play(); return 'ok'} return null"):
             logger.info("视频是暂停的 → 已恢复播放")
+
+    @classmethod
+    def is_ended(cls,ui:"Ui") -> bool:
+        """用 JS 调用ended看看是否播放完成"""
+        return ui.js(
+            "var v = document.querySelector('video'); return (v && v.ended) ? 'ended' : null;"
+        ) is not None
+
+
+    @classmethod
+    def play_next(cls, ui: "Ui") -> None:
+        logger.info("本集播完 → 切下一集")
+        try:
+            ui.wait(cls.NEXT_EP,10)
+            ui.click(cls.NEXT_EP)
+        except Exception:
+            logger.debug("普通点击不可点")
+
+    @classmethod
+    def close_popup(cls, ui: "Ui") -> bool:
+        # ① JS 负责找（可见过滤这套 JS 擅长的），找到就贴标签
+        marked = ui.js(
+            "var btn = [...document.querySelectorAll('.el-dialog__footer .btn')]"
+            ".filter(e => e.offsetWidth > 0 || e.offsetHeight > 0).pop();"
+            "if (!btn) return null;"
+            "btn.setAttribute('data-zhs-click', '1');"
+            "return 'marked';"
+        )
+        if marked is None:
+            logger.info("没有可见的结果窗需要关闭")
+            return False
+        # ② selenium 负责点（真人式点击 + 被拦截会报错）
+        try:
+            ui.click('[data-zhs-click="1"]')
+            logger.info("弹窗已关闭")
+            return True
+        finally:
+            # ③ 无论点没点成，撕标签（标签是临时的，不能留在页面上）
+            ui.js("var b = document.querySelector('[data-zhs-click]');"
+                  "if (b) b.removeAttribute('data-zhs-click');")
 
     @classmethod
     def finished(cls, ui: "Ui") -> bool:
@@ -140,8 +195,15 @@ def run_course(ui: "Ui", poll: float = 0.5, max_idle: float = 600.0) -> None:
         # ② 弹题
         if CoursePage.has_popup(ui):
             CoursePage.answer_popup(ui)
+            sleep(5)
+            CoursePage.close_popup(ui)
             idle = 0.0
-            continue
+
+        if CoursePage.is_ended(ui):
+            ui.hover("video")
+            sleep(0.5)
+            CoursePage.play_next(ui)
+            idle = 0.0
 
         # ③ 暂停恢复
         if CoursePage.is_paused(ui):

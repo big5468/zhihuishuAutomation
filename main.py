@@ -56,7 +56,7 @@ def cmd_run(cfg: Settings) -> int:
         # ---- 第 2 步：进课程页，起状态机 ----
         logger.info("打开课程页：%s", cfg.target.course_url)
         ui.open(cfg.target.course_url)
-        run_course(ui, poll=cfg.waits.poll)
+        run_course(ui, poll=cfg.waits.poll,max_idle=cfg.waits.max_idle)
 
     logger.info("全部完成 ✔")
     return 0
