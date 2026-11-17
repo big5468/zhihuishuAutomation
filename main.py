@@ -50,7 +50,7 @@ def cmd_run(cfg: Settings) -> int:
         # ---- 第 1 步：登录 ----
         LoginPage.open(ui, cfg.login.url)
         if cfg.login.mode == "auto":
-            LoginPage.auto_login(ui, cfg.account.username, cfg.account.password)
+            LoginPage.auto_login(ui,cfg.account.userschool, cfg.account.username, cfg.account.password)
         LoginPage.wait_manual(ui, cfg.login.wait_timeout)  # auto 模式也用它等跳转，双保险
 
         # ---- 第 2 步：进课程页，起状态机 ----

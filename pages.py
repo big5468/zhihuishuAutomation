@@ -1,14 +1,3 @@
-"""页面对象 + 刷课状态机（项目的心脏）。
-
-分工：
-- LoginPage / CoursePage = "页面上有什么、怎么操作"，选择器全部住在这里
-- run_course() = "整件事的流程"：一个 while 循环四个分支，是全项目最重要的 30 行
-
-⚠ 选择器说明：下面带 [待校对] 标记的是对真实智慧树页面的"最佳猜测"，
-未经真机验证。第一次真跑如果报"等待元素超时"，按 理解.md 的《选择器
-校对指南》用 F12 对着真实页面把选择器改对即可 —— 逻辑不用动。
-"""
-
 from __future__ import annotations
 
 import logging
@@ -38,8 +27,9 @@ class LoginPage:
     # 登录页专属域名：URL 还停在这些域上 = 还没登录成功
     LOGIN_HOSTS = ("login.zhihuishu.com", "passport.zhihuishu.com")
 
-    USER = "input#username"    # [待校对] auto 模式的账号输入框
-    PASS = "input#password"    # [待校对] auto 模式的密码输入框
+    SCHOOL = 'input[role="combobox"]'
+    USER = ".el-input__inner[type=text]"    # [待校对] auto 模式的账号输入框
+    PASS = ".el-input__inner[type=password]"    # [待校对] auto 模式的密码输入框
     SUBMIT = "#loginBtn"       # [待校对] auto 模式的登录按钮
 
     @classmethod
@@ -47,13 +37,27 @@ class LoginPage:
         ui.open(login_url)
 
     @classmethod
-    def auto_login(cls, ui: "Ui", username: str, password: str) -> None:
+    def auto_login(cls, ui: "Ui",userschool: str, username: str, password: str) -> None:
         """自动填表登录（表单结构变了就失效，届时改上面的选择器）。"""
         logger.info("自动填表登录：%s", username)
+        cls.choose_school(ui,userschool)
+        sleep(1)
         ui.type(cls.USER, username)
+        sleep(1)
         ui.type(cls.PASS, password)
-        ui.click(cls.SUBMIT)
 
+    @classmethod
+    def choose_school(cls, ui: "Ui", school_name: str) -> None:
+        logger.info("选择学校：%s", school_name)
+        ui.click(cls.SCHOOL)  # ① 点开下拉
+        ui.type(cls.SCHOOL, school_name)  # ② 打字过滤列表
+        sleep(1)
+        ok = ui.js(  # ③ 在弹出的列表里点匹配项
+
+            
+        )
+        if ok is None:
+            raise UiTimeout(f"学校列表里没找到：{school_name}")
     @classmethod
     def wait_manual(cls, ui: "Ui", timeout: float) -> str:
         """manual 模式：开好登录页后等你亲手登录（含扫码）。
@@ -169,6 +173,16 @@ class CoursePage:
     @classmethod
     def finished(cls, ui: "Ui") -> bool:
         return ui.exists(cls.FINISHED)
+
+class ExamPage:
+    """
+    考试方法页 获取题目，调用LLM获取答案，下一题
+    目还是shadow-root 它是挂在某个普通 DOM 元素(host)下面的一棵“隐藏子树”，
+    网页用它可以把自己的内部结构封装起来，外部默认看不见、也查不到。
+    """
+
+
+    pass
 
 
 def run_course(ui: "Ui", poll: float = 0.5, max_idle: float = 600.0) -> None:

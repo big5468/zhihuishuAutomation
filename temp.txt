@@ -2,42 +2,65 @@
 
 当前程序存在的问题
 看门狗状态机在播放视频会无事件输出,超时看门狗会结束程序
--> 解决:延长看门狗的时间 || is_paused为false将不记录时间
-在答题完成后没有关闭当前窗口
--> 加一步行为
-	<div data-v-b4fb0e2e="" class="btn">关闭</div> 元素
+-> 解决:延长看门狗的时间 || is_paused为false将不记录时间   ✔
+在答题完成后没有关闭当前窗口                                           ✔
+->方案为js派发新的class熟悉，再用selenuim找到class元素点击 (解决class相同修饰，js中也有一个问题 会找多多个元素，解决方法为对元素判断是否是显示性的) 
 ##测试错误的问题
-网页播放的视频是第1.1开始的，而不是真实进度
-导致测试的结构无法参考
+网页播放的视频是第1.1开始的，而不是真实进度 
+导致测试的结构无法参考       ✔
 NEW问题
 进入课程找寻未播放的进度
-播放结束判断，点击下一集。而不是继续video.play()
--> 弹窗面板 el-dialog el-dialog__header    AI助教小智给你出题啦！学习过程中有问题，随时
--> 弹窗回答
-	<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use></svg><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use>
-	图标名称
--> 关闭弹窗 
+播放结束判断，点击下一集。而不是继续video.play()   ✔
+-> 弹窗面板 el-dialog el-dialog__header    AI助教小智给你出题啦！学习过程中有问题，随时           ✔
+-> 弹窗回答                                  ✔
+	判断题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
+	多选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use></svg>	
+	单选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
+	我们可以看出class中 都为套用了同一class icon topic-option 他们都能复用用一逻辑  
+-> 关闭弹窗  ✔
  	el-dialog__footer dialog-footer bth
--> 学前必读 元素 dialog-read  iconfont iconguanbi
+
+
 解决检测
+经过测试发现仅会在js点击操作会导致检测脚本         会出现图像验证码
 答题时的过快操作
 -> 答题的随机休眠程序
 播放的随机暂停，模仿行为
 -> 新建行为
 
+<input type="text" class="el-select__input" autocomplete="off" tabindex="0" role="combobox" spellcheck="false" aria-activedescendant="" aria-controls="el-id-8083-2" aria-expanded="false" aria-autocomplete="none" aria-haspopup="listbox" id="el-id-8083-22" style="min-width: 11px;">
 
-18:52:16 INFO    pages: 开始刷课（每 1.5 秒轮询一次）
-18:52:21 INFO    pages: 视频是暂停的 → 已恢复播放
-18:52:26 INFO    pages: 视频是暂停的 → 已恢复播放
-18:52:27 INFO    pages: 本集播完 → 切下一集
-18:52:27 INFO    pages: 视频是暂停的 → 已恢复播放
-18:52:29 INFO    pages: 视频是暂停的 → 已恢复播放
-18:54:22 INFO    pages: 检测到弹题 → 选第一项并提交
 
-暂停恢复会多次触发
-选择会卡住在这
 
-判断题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
-多选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconfuxuan"></use></svg>
-单选题<svg data-v-b4fb0e2e="" aria-hidden="true" class="icon topic-option"><use data-v-b4fb0e2e="" xlink:href="#iconxuan"></use></svg>
-我们可以看出class中 都为套用了同一class icon topic-option 他们都能复用用一逻辑  
+我来简单回顾一下本期项目
+架构拆分
+├── main.py            # 流程编排
+├── settings.py        # 读取yaml配置方
+├── config/
+│   ├── settings.yaml  # 主配置
+│   └── account.yaml   # 账号
+├── errors.py          # 三个异常标签：ConfigError / UiTimeout / AutomationError
+├── loging_setup.py    # 日志装配
+├── browser.py         # 浏览器工厂
+├── ui.py              # ★ Ui 协议
+└── pages.py           # ★ 页面对象
+
+简而言之，项目的总体架构比较有亮点，拆分具体模块来实现
+ui与brower最具有抽象的层，一个抽象功能，一个抽象实例
+关于操作事件，由selenuim点击来构成(模拟用户行为)  
+使用js来操作会被网页所检测到，但也会出现class修饰不好查找的情况，而项目给出的方案是对于当前元素打一个临时属性，再后面用py再找出来
+js与py的混合实现，来移除js点击被检测脚本的问题。后面再撕掉标签，防止元素错乱。
+说到js查找，也有遇到一个问题，页面又找到多个元素。我这边的解决是查看元素的w,h是否>0，是否是可见的
+然后用js来获取是否有当前文本，js videoapi获取是否播放完成，播放 就不再说什么
+寻找class修饰元素，找到的是第一个拥有的元素
+关于，下一集，video未拥有这条api，我采取的是点击元素的方案。但是再无操作播放功能区会自动隐藏。导致后面无法点击到元素
+我采取的是hover鼠标行为，让播放功能区显示出来在点击
+还要看门狗的时效问题，前期设置太短的事件导致误杀
+这也就是细节的实现
+
+关于项目架构值得借鉴的地方，每个模块的职责，如何抽象行为。我目前对于架构的抽象还是比较乱的，一份好的架构也是决定项目走下去的关键。
+对于测试的发现，我是立了一份txt文件，来临时记录一下，这个总结也是当前的有感而发。这套方法还是比较的可以。在每次复盘也能促进架构的优化。
+在这份中如何说设计模式，是更需求的抽象
+在使用AI构建中，让AI生成关于项目的解析.md，边看边理解
+这次的架构更着重在真实项目中。我看来看由AI给出的回答。有以下方面
+先描绘我们需要的具体流程->找角色(抽象功能)->定边界 

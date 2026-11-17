@@ -10,7 +10,7 @@ browser:
   profile_dir: state/browser-profile   # 登录态缓存，二次启动免登录
 
 login:
-  mode: manual          # manual=自己登录（稳，默认）；auto=用账号密码自动填表
+  mode: auto          # manual=自己登录（稳，默认）；auto=用账号密码自动填表
   url: https://login.zhihuishu.com/?origin=zhs&service=https://onlineservice-api.zhihuishu.com/gateway/f/v1/login/gologin
   wait_timeout: 300     # 手动登录最长等你多少秒
 

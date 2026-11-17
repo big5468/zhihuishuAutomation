@@ -127,6 +127,7 @@ def load_settings(config_path: Path | str | None = DEFAULT_CONFIG) -> Settings:
 
     # 账号：account.yaml 打底，环境变量最高（避免密码躺在文件里）
     account = _read_yaml(ACCOUNT_FILE)
+    cfg.account.userschool = account.get("userschool") or cfg.account.userschool
     cfg.account.username = account.get("username") or cfg.account.username
     cfg.account.password = account.get("password") or cfg.account.password
     cfg.account.username = os.environ.get("ZHS_USERNAME") or cfg.account.username
